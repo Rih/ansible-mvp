@@ -1,0 +1,3 @@
+slack_webhook_url: "https://url/services/XXXX/YYYY/ZZZZ"
+slack_channel:     "#general"
+bitbucket_repo:    "git@bitbucket.org:rodrihgod/ansible.git"
