@@ -53,3 +53,8 @@ Nota: `./bin/run-ansible.sh` ejecuta solo `playbooks/production.yml` (solo produ
 
 ## Workaround (git safe.directory)
 `git config --global --add safe.directory /var/www/ansible`
+
+
+# Copiar SSH Keys en Access Tokens del repositorio
+## Repositorio de Ultrabox
+git@bitbucket-ultrabox:ultraboxsa/ultrabox-ansible.git
