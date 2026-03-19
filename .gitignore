@@ -1,0 +1,4 @@
+keys
+keys_template/**/known_hosts
+keys_template/**/known_hosts.old
+vault/secrets.yml

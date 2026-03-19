@@ -1,0 +1,41 @@
+# ─────────────────────────────────────────
+# PASO 1: Deploy y validación en Staging (B)
+# ─────────────────────────────────────────
+- name: Deploy en Staging
+  hosts: staging
+  gather_facts: yes
+  vars_files:
+    - ../vault/secrets.yml
+  vars:
+    repo_url: "{{ bitbucket_repo }}"
+
+  roles:
+    - deploy
+    - test
+
+  post_tasks:
+    - name: Marcar staging como exitoso
+      set_fact:
+        staging_ok: true
+
+# ─────────────────────────────────────────
+# PASO 2: Deploy en Producción (A) — solo si staging pasó
+# ─────────────────────────────────────────
+- name: Deploy en Producción
+  hosts: production
+  gather_facts: yes
+  vars_files:
+    - ../vault/secrets.yml
+  vars:
+    repo_url: "{{ bitbucket_repo }}"
+
+  roles:
+    - deploy
+
+  post_tasks:
+    - name: Notificar éxito en Slack
+      include_role:
+        name: notify
+      vars:
+        slack_status: "success"
+        slack_message: "✅ Deploy exitoso en producción — rama: {{ app_branch }}"

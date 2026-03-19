@@ -1,0 +1,40 @@
+version: "3.8"
+
+networks:
+  vpn-local:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.10.1.0/24
+
+services:
+
+  maquina-a:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.controller
+    container_name: maquina-a
+    hostname: maquina-a
+    networks:
+      vpn-local:
+        ipv4_address: 10.10.1.10
+    volumes:
+      - ../:/opt/ansible-deploy   # monta el proyecto en vivo
+      - ../keys/a/deploy:/home/deploy/.ssh
+    ports:
+      - "2210:22"                 # SSH accesible desde tu PC si necesitas
+
+  maquina-b:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.python
+    container_name: maquina-b
+    hostname: maquina-b
+    networks:
+      vpn-local:
+        ipv4_address: 10.10.1.20
+    volumes:
+      - ../keys/b/deploy:/home/deploy/.ssh
+    ports:
+      - "2211:22"
+      - "3001:3000"               # puerto de la app staging

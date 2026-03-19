@@ -1,0 +1,56 @@
+- name: Instalar git
+  package:
+    name: git
+    state: present
+  become: yes
+
+- name: Crear directorio de la app
+  file:
+    path: "{{ app_dir }}"
+    state: directory
+    owner: "{{ ansible_user }}"
+    mode: "0755"
+  become: yes
+
+- name: Configurar git safe.directory como root
+  command: git config --global --add safe.directory "{{ app_dir }}"
+  become: yes
+  ignore_errors: yes
+
+- name: Configurar git safe.directory como deploy
+  command: git config --global --add safe.directory "{{ app_dir }}"
+  become: yes
+  become_user: "{{ ansible_user }}"
+  ignore_errors: yes
+
+- name: Corregir permisos de clave SSH
+  file:
+    path: "/home/{{ ansible_user }}/.ssh/id_rsa"
+    mode: "0600"
+    owner: "{{ ansible_user }}"
+  become: yes
+  ignore_errors: yes
+
+- name: Clonar o actualizar repositorio
+  git:
+    repo:           "{{ repo_url }}"
+    dest:           "{{ app_dir }}"
+    version:        "{{ app_branch }}"
+    accept_hostkey: yes
+    force:          yes
+  become: yes
+  become_user: "{{ ansible_user }}"
+  register: git_result
+
+- name: Instalar dependencias
+  command: npm install --production
+  args:
+    chdir: "{{ app_dir }}/express-health-app"
+  when: git_result.changed
+
+- name: Recargar Apache2 si hubo cambios
+  service:
+    name: apache2
+    state: reloaded
+  become: yes
+  when: git_result.changed

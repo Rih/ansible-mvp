@@ -1,0 +1,4 @@
+app_dir:      "/var/www/ansible"
+app_branch:   "main"
+service_name: "mi-app"
+app_env:      "production"

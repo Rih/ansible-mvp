@@ -1,0 +1,11 @@
+- name: Deploy y validación en Staging (Máquina B)
+  hosts: staging
+  gather_facts: yes
+  vars_files:
+    - ../vault/secrets.yml
+  vars:
+    repo_url: "{{ bitbucket_repo }}"
+
+  roles:
+    - deploy
+    - test

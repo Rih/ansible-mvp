@@ -1,0 +1,23 @@
+- name: Enviar notificación a Slack
+  uri:
+    url:          "{{ slack_webhook_url }}"
+    method:       POST
+    body_format:  json
+    body:
+      channel:    "{{ slack_channel }}"
+      username:   "Ansible Deploy"
+      icon_emoji: "{{ ':white_check_mark:' if slack_status == 'success' else ':rotating_light:' }}"
+      attachments:
+        - color:  "{{ 'good' if slack_status == 'success' else 'danger' }}"
+          text:   "{{ slack_message }}"
+          fields:
+            - title: "Servidor"
+              value: "{{ inventory_hostname }}"
+              short: true
+            - title: "Rama"
+              value: "{{ app_branch }}"
+              short: true
+            - title: "Hora"
+              value: "{{ ansible_date_time.iso8601 }}"
+              short: true
+    status_code: 200
