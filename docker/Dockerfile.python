@@ -18,7 +18,7 @@ RUN echo "deploy ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 RUN mkdir -p /var/www
 RUN mkdir -p /home/deploy/.ssh
 RUN chown -R deploy:deploy /var/www
-COPY ../keys/b/deploy/ /home/deploy/.ssh
+COPY ./keys/b/deploy/ /home/deploy/.ssh
 # COPY ../keys/b/root /root/.ssh
 RUN chmod 600 /home/deploy/.ssh/id_rsa
 # RUN chmod 600 /root/.ssh/id_rsa

@@ -18,10 +18,10 @@ RUN echo "deploy ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 RUN mkdir -p /var/www
 RUN mkdir -p /home/deploy/.ssh
-COPY ../ /opt/ansible-deploy
+COPY ./ /opt/ansible-deploy
 RUN chown -R deploy:deploy /opt/ansible-deploy
 RUN chown -R deploy:deploy /var/www
-COPY ../keys/a/deploy/ /home/deploy/.ssh
+COPY ./keys/a/deploy/ /home/deploy/.ssh
 # COPY ../keys/a/root /root/.ssh
 RUN chmod 600 /home/deploy/.ssh/id_rsa
 # RUN chmod 600 /root/.ssh/id_rsa
