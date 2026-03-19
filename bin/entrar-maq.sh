@@ -1,2 +1,2 @@
 
-cd docker && docker compose exec maquina-$1 bash
+docker-compose exec maquina-$1 bash
