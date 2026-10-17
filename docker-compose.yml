@@ -5,7 +5,7 @@ networks:
     driver: bridge
     ipam:
       config:
-        - subnet: 10.10.1.0/24
+        - subnet: 10.50.1.0/24
 
 services:
 
@@ -17,12 +17,35 @@ services:
     hostname: maquina-a
     networks:
       vpn-local:
-        ipv4_address: 10.10.1.10
+        ipv4_address: 10.50.1.10
+    ports:
+      - "2210:22"                 # SSH accesible desde tu PC si necesitas
+      - "8002:8001"
     volumes:
       - ./:/opt/ansible-deploy   # monta el proyecto en vivo
       - ./keys/a/deploy:/home/deploy/.ssh
-    ports:
-      - "2210:22"                 # SSH accesible desde tu PC si necesitas
+      # Sincronizar la carpeta ultrabox_legacy
+      - ./ultrabox_legacy:/app
+      # Volumen para archivos estáticos
+      - static_volume:/app/static
+      # Volumen para media files
+      - media_volume:/app/media
+    env_file:
+      - ./ultrabox_legacy/ultrabox/.env
+    environment:
+      - DJANGO_SETTINGS_MODULE=ultrabox.settings
+      - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1
+      # Variables de PostgreSQL
+      - PG_DB_HOST=postgres
+      - PG_DB_NAME=${PG_DB_NAME:-ub_publico_dev}
+      - PG_DB_USER=${PG_DB_USER:-ub_publico_user}
+      - PG_DB_PWD=${PG_DB_PWD:-UBpublic2019}
+      - PG_DB_PORT=5432
+    working_dir: /app
+    depends_on:
+      - postgres
+    restart: unless-stopped
 
   maquina-b:
     build:
@@ -32,9 +55,65 @@ services:
     hostname: maquina-b
     networks:
       vpn-local:
-        ipv4_address: 10.10.1.20
-    volumes:
-      - ./keys/b/deploy:/home/deploy/.ssh
+        ipv4_address: 10.50.1.20
     ports:
       - "2211:22"
       - "3001:3000"               # puerto de la app staging
+    volumes:
+      - ./keys/b/deploy:/home/deploy/.ssh
+      # Sincronizar la carpeta ultrabox_legacy
+      - ./ultrabox_legacy:/app
+      # Volumen para archivos estáticos
+      - static_volume:/app/static
+      # Volumen para media files
+      - media_volume:/app/media
+    env_file:
+      - ./ultrabox_legacy/ultrabox/.env
+    environment:
+      - DJANGO_SETTINGS_MODULE=ultrabox.settings
+      - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1
+      # Variables de PostgreSQL
+      - PG_DB_HOST=postgres
+      - PG_DB_NAME=${PG_DB_NAME:-ub_publico_dev}
+      - PG_DB_USER=${PG_DB_USER:-ub_publico_user}
+      - PG_DB_PWD=${PG_DB_PWD:-UBpublic2019}
+      - PG_DB_PORT=5432
+    working_dir: /app
+    depends_on:
+      - postgres
+    command: >
+      sh -c "
+        echo 'Esperando a que PostgreSQL esté listo...' &&
+        sleep 10 &&
+        echo 'Iniciando servidor Django...' &&
+        python manage.py collectstatic --noinput &&
+        python manage.py migrate &&
+        python manage.py runserver 0.0.0.0:8001
+      "
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:11
+    container_name: staging_postgres
+    # Configuración para leer variables de entorno
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${PG_DB_NAME:-ub_publico_dev}
+      POSTGRES_USER: ${PG_DB_USER:-ub_publico_user}
+      POSTGRES_PASSWORD: ${PG_DB_PWD:-UBpublic2019}
+    ports:
+      - "${PG_DB_PORT:-5443}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      vpn-local:
+        ipv4_address: 10.50.1.30
+    restart: unless-stopped
+
+
+volumes:
+  static_volume:
+  media_volume:
+  postgres_data:

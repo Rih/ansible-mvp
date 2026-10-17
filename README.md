@@ -22,6 +22,8 @@ Si usas `./bin/keygen.sh`, repite el proceso para obtener 2 pares de claves y c�
 - `slack_channel`
 - `bitbucket_repo` (ej: `git@bitbucket.org:rodrihgod/ansible.git`)
 
+0.d Crea el .env copiando env_example
+
 ## 1) Levantar contenedores
 Desde la raíz del proyecto:
 1. Construir (primera vez o cambios en imágenes): `./bin/build.sh`

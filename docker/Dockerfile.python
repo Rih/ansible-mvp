@@ -1,5 +1,6 @@
-FROM python:3.11-alpine
+FROM python:2.7-alpine
 
+# Runtime (.so) que suelen exigir lxml, Pillow, psycopg2, etc.
 RUN apk add --no-cache \
     openssh-server \
     openssh-client \
@@ -8,7 +9,15 @@ RUN apk add --no-cache \
     npm \
     bash \
     git \
-    sudo
+    sudo \
+    libxml2 \
+    libxslt \
+    libjpeg-turbo \
+    freetype \
+    zlib \
+    libpq \
+    libffi \
+    openssl
 
 RUN mkdir -p /var/run/sshd
 RUN ssh-keygen -A
@@ -19,12 +28,31 @@ RUN mkdir -p /var/www
 RUN mkdir -p /home/deploy/.ssh
 RUN chown -R deploy:deploy /var/www
 COPY ./keys/b/deploy/ /home/deploy/.ssh
-# COPY ../keys/b/root /root/.ssh
 RUN chmod 600 /home/deploy/.ssh/id_rsa
-# RUN chmod 600 /root/.ssh/id_rsa
 WORKDIR /var/www
+COPY ultrabox_legacy/requirements.txt .
+# Compilar extensiones C (lxml, Pillow, psycopg2, pycrypto, etc.): build + *-dev
+# python:2.7-alpine ya trae headers en /usr/local; no uses python-dev del apk (otro Python).
+RUN apk add --no-cache --virtual .build-deps \
+    build-base \
+    linux-headers \
+    libffi-dev \
+    openssl-dev \
+    libxml2-dev \
+    libxslt-dev \
+    jpeg-dev \
+    zlib-dev \
+    freetype-dev \
+    postgresql-dev \
+    && pip install --no-cache-dir -r requirements.txt \
+    && apk del .build-deps
+# Copiar el resto del código
+COPY ultrabox_legacy/ .
+# Crear directorio para archivos estáticos
+RUN mkdir -p /app/static
+
 RUN ssh-keyscan bitbucket.org >> /home/deploy/.ssh/known_hosts
 RUN chown -R deploy:deploy /home/deploy/.ssh/
 # RUN git clone git@bitbucket.org:rodrihgod/ansible.git
-EXPOSE 22
+EXPOSE 22 8001
 CMD ["/usr/sbin/sshd", "-D"]
